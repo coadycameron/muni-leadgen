@@ -1,0 +1,9 @@
+google-genai
+google-cloud-secret-manager
+google-cloud-firestore
+google-api-python-client
+google-auth
+google-auth-httplib2
+httpx[http2]
+openpyxl
+requests

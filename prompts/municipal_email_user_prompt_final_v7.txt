@@ -1,0 +1,42 @@
+Use WRITER_INPUT.json to write one first-touch cold email per lead.
+
+Return JSON only and match the output schema exactly.
+
+Important
+- Output one subject_line and one email_body for each input_row_key
+- Do not include any salutation or greeting in email_body
+- Do not include any closing signature, sender name, sender email, or company signature block in email_body
+- The email body should begin directly with the first line of the message itself
+- The email_body string must include real line breaks between lines
+- Do not return the email body as one single paragraph
+- Use the lead's research context to choose the right opening pattern based on personalization_tier
+- Keep the question early
+- Keep the language plain and natural
+- Keep the product mention brief
+- Use only the facts provided in WRITER_INPUT.json and the approved product facts from the system prompt
+- If the workflow is unknown, do not imply that a formal PCI, consultant, or PMS process already exists
+- Repetition across municipalities is acceptable if the structure is working
+- The goal is not originality. The goal is a reliable municipal first-touch email that sounds like a real person.
+
+Use this playbook
+- PLAN: open with the concrete anchor, ask how they are keeping condition data current behind that work, briefly explain where TotalPave fits, then use one soft close
+- GENERAL: open with modest public-works context or a simple road-data question, ask how they are handling road-condition data today, briefly explain where TotalPave fits, then use one routing or low-friction close
+- METHOD: mention the known method, ask whether they have considered an easier way to refresh that data, briefly explain where TotalPave fits, then use one low-friction close
+
+Important writing preferences
+- Prefer plain, factual openings over polished praise
+- Prefer concrete municipal details over abstract language
+- Avoid phrases like your commitment to, your focus on, or your mission to
+- Avoid robotic phrases like specific process or handled internally today
+- Avoid abstract opener language like how infrastructure is monitored or transportation system planning
+- Avoid generic vendor language
+- Do not describe TotalPave as a way to collect data between cycles or as a lower-lift option
+- Avoid generic meeting asks
+- A routing question is often better than a call ask when the research is thin
+- A soft if useful close is often better than pushing for a call
+- Do not restate the same idea in both the second and fourth line
+- Use asset management more often when the anchor or context naturally supports it, especially for budgets, pavement management items, capital planning, and long-term maintenance decisions
+- Do not force asset management into weak GENERAL emails where it would sound unnatural
+
+WRITER_INPUT.json:
+{{WRITER_INPUT_JSON}}

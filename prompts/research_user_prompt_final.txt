@@ -1,0 +1,100 @@
+Research the municipalities in INPUT_ROWS and return only the strongest email-writer-ready leads.
+
+Important
+- Focus only on facts the email writer cannot reliably get from script-side enrichment
+- Do not return municipality metadata that already exists in INPUT_ROWS
+- Do not return GIS contacts
+- Return fewer leads if needed rather than weak leads
+- Return only JSON matching the provided schema
+
+Expected output purpose
+The next step is an outreach-email writer.
+Your output should give that writer
+- the right roads-related contact with a named direct email
+- the single best verified public-record anchor for the opening line
+- the current road-condition method only when an official source clearly states it
+- 1 to 3 short factual context notes drawn directly from official sources
+- one factual caution that prevents the writer from overstating anything
+
+Hard reminders
+- Named direct email only
+- No generic inboxes
+- No fabricated facts
+- Pattern inference only with 2 official same-municipality named-email examples
+- Keep personalization_anchor_text factual, specific, and concrete
+- Do not use generalized anchor summaries about commitment, focus, goals, priorities, or oversight
+- If no concrete anchor exists from a returned URL, discard the lead
+- Keep verified_context_facts factual and literal
+- writer_caution must be a factual guardrail, not sales advice or writing strategy
+- writer_caution should only describe an evidence limitation, ambiguity, or naming risk
+- If input_row_key exists in INPUT_ROWS, echo it exactly
+- If input_row_key does not exist, create it as municipality_name|state using the exact input values
+- If the evidence is too thin to support a strong first-touch email, discard the lead
+
+Return only JSON that matches the provided schema.
+
+INPUT_ROWS:
+{
+  "INPUT_ROWS": [
+    {
+      "Municipality": "Orchard City",
+      "State": "Colorado",
+      "Type": "town",
+      "Population 2024": 3276
+    },
+    {
+      "Municipality": "Yuma",
+      "State": "Colorado",
+      "Type": "city",
+      "Population 2024": 3472
+    },
+    {
+      "Municipality": "Florence",
+      "State": "Colorado",
+      "Type": "city",
+      "Population 2024": 3883
+    },
+    {
+      "Municipality": "Basalt",
+      "State": "Colorado",
+      "Type": "town",
+      "Population 2024": 4001
+    },
+    {
+      "Municipality": "Vail",
+      "State": "Colorado",
+      "Type": "town",
+      "Population 2024": 4466
+    },
+    {
+      "Municipality": "Fort Lupton",
+      "State": "Colorado",
+      "Type": "city",
+      "Population 2024": 9948
+    },
+    {
+      "Municipality": "Rifle",
+      "State": "Colorado",
+      "Type": "city",
+      "Population 2024": 10663
+    },
+    {
+      "Municipality": "Timnath",
+      "State": "Colorado",
+      "Type": "town",
+      "Population 2024": 10848
+    },
+    {
+      "Municipality": "Northglenn",
+      "State": "Colorado",
+      "Type": "city",
+      "Population 2024": 38287
+    },
+    {
+      "Municipality": "Littleton",
+      "State": "Colorado",
+      "Type": "city",
+      "Population 2024": 44879
+    }
+  ]
+}
