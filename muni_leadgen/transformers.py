@@ -81,6 +81,26 @@ def _choose_better_lead(current: ResearchLead, candidate: ResearchLead) -> Resea
     return current
 
 
+def _fallback_contact_fit_reason(lead: ResearchLead) -> str:
+    title = str(lead.contact_title or "").strip().lower()
+    if any(token in title for token in {"public works", "transportation", "street", "roads", "highway"}):
+        if "director" in title:
+            return "Public Works Director with direct responsibility for street maintenance, pavement planning, or related public works decisions."
+        if "engineer" in title:
+            return "Municipal public works leader with direct responsibility for street maintenance, pavement planning, or related infrastructure decisions."
+        return "Municipal public works contact with direct responsibility for street maintenance, pavement planning, or related infrastructure decisions."
+    if any(token in title for token in {"administrator", "manager", "city manager", "town manager", "clerk", "cao", "chief administrative"}):
+        return "Municipal administrator acting as the best available contact for roads-related planning and public works decisions."
+    return "Named municipal contact identified as the best available contact for roads-related planning and pavement management decisions."
+
+
+def _writer_contact_fit_reason(lead: ResearchLead) -> str:
+    explicit = str(getattr(lead, "contact_fit_reason", "") or "").strip()
+    if explicit:
+        return explicit
+    return _fallback_contact_fit_reason(lead)
+
+
 def filter_research_leads(
     research_leads: Iterable[ResearchLead],
     selected_rows: Iterable[MunicipalityRow],
@@ -136,13 +156,20 @@ def build_writer_input_payload(
             input_row_key=key,
             municipality_name=muni.municipality_name,
             state=muni.state,
+            contact_full_name=lead.contact_full_name,
             contact_preferred_name=lead.contact_preferred_name,
             contact_title=lead.contact_title,
+            contact_email=lead.contact_email,
+            contact_fit_reason=_writer_contact_fit_reason(lead),
             personalization_tier=lead.personalization_tier,
             personalization_anchor_text=lead.personalization_anchor_text,
-            current_method_or_workflow=lead.current_method_or_workflow,
             verified_context_facts=list(lead.verified_context_facts),
+            current_method_or_workflow=lead.current_method_or_workflow,
             writer_caution=lead.writer_caution,
+            contact_source_url=lead.contact_source_url,
+            catalyst_source_url=lead.catalyst_source_url,
+            corroboration_source_url=lead.corroboration_source_url,
+            research_confidence=lead.research_confidence,
         )
         out.append(writer_lead.to_dict())
     return {"leads": out}
@@ -189,7 +216,7 @@ def build_sheet_rows(finalized_leads: Iterable[dict]) -> List[List[str]]:
                 str(lead.get("personalization_tier") or ""),
                 str(lead.get("personalization_anchor_text") or ""),
                 str(lead.get("current_method_or_workflow") or ""),
-                " | ".join(list(lead.get("verified_context_facts") or [])),
+                " | ".join([str(x) for x in list(lead.get("verified_context_facts") or []) if str(x).strip()]),
                 str(lead.get("writer_caution") or ""),
                 str(lead.get("contact_source_url") or ""),
                 str(lead.get("catalyst_source_url") or ""),

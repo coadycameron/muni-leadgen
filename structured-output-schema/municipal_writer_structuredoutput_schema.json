@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "properties": {
+    "emails": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "input_row_key": {
+            "type": "string"
+          },
+          "subject_line": {
+            "type": "string"
+          },
+          "email_body": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input_row_key",
+          "subject_line",
+          "email_body"
+        ]
+      }
+    }
+  },
+  "required": [
+    "emails"
+  ]
+}

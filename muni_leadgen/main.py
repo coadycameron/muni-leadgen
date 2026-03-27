@@ -109,8 +109,8 @@ def main() -> None:
 
     research_system_prompt = _read_text(PROMPTS_DIR / "research_system_prompt_final.txt")
     research_user_prompt = _read_text(PROMPTS_DIR / "research_user_prompt_final.txt")
-    writer_system_prompt = _read_text(PROMPTS_DIR / "municipal_email_system_prompt_final_v7.txt")
-    writer_user_prompt = _read_text(PROMPTS_DIR / "municipal_email_user_prompt_final_v7.txt")
+    writer_system_prompt = _read_text(PROMPTS_DIR / "municipal_email_system_prompt_final.txt")
+    writer_user_prompt = _read_text(PROMPTS_DIR / "municipal_email_user_prompt_final.txt")
     research_schema = _read_json(SCHEMAS_DIR / "research_structuredoutput_schema.json")
     writer_schema = _read_json(SCHEMAS_DIR / "municipal_writer_structuredoutput_schema.json")
 

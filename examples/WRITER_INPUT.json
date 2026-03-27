@@ -1,0 +1,154 @@
+{
+  "leads": [
+    {
+      "input_row_key": "Orchard City|Colorado",
+      "municipality_name": "Orchard City",
+      "contact_preferred_name": "Melissa",
+      "contact_title": "Town Administrator",
+      "contact_fit_reason": "Melissa Oelke is the Town Administrator (CAO fallback) for this small municipality of ~3,300, overseeing all administrative functions including infrastructure and street maintenance budgeting.",
+      "personalization_tier": "GENERAL",
+      "personalization_anchor_text": "2024 Street Maintenance Project focused on seal coating",
+      "verified_context_facts": [
+        "The Town of Orchard City manages its own local street maintenance and repair operations.",
+        "The town issued a public notice for its 2024 Street Maintenance Project, specifically identifying seal coating work."
+      ],
+      "current_method_or_workflow": "UNKNOWN",
+      "writer_caution": "Contact is a CAO fallback for a small municipality; no dedicated Public Works Director with a listed email was found."
+    },
+    {
+      "input_row_key": "Yuma|Colorado",
+      "municipality_name": "Yuma",
+      "contact_preferred_name": "Tom",
+      "contact_title": "Public Works Director",
+      "contact_fit_reason": "Tom Taylor is the Public Works Director, leading the department responsible for the city's street maintenance and repair programs.",
+      "personalization_tier": "GENERAL",
+      "personalization_anchor_text": "2024 street seal coat project",
+      "verified_context_facts": [
+        "The Public Works Director oversees the street department and all municipal utility operations.",
+        "The city recently executed a 2024 street seal coat project to preserve local pavement quality."
+      ],
+      "current_method_or_workflow": "UNKNOWN",
+      "writer_caution": "The city mentions pavement preservation work but does not publicly document a specific rating methodology or software."
+    },
+    {
+      "input_row_key": "Florence|Colorado",
+      "municipality_name": "Florence",
+      "contact_preferred_name": "Rick",
+      "contact_title": "Public Works Director",
+      "contact_fit_reason": "Rick DeLuca serves as the Public Works Director, managing the street department and city-wide infrastructure preservation efforts.",
+      "personalization_tier": "GENERAL",
+      "personalization_anchor_text": "annual street maintenance and paving projects for 2024",
+      "verified_context_facts": [
+        "The Public Works department is responsible for the maintenance and repair of all city streets and alleys.",
+        "The city maintains a dedicated Street Department focused on patching, chip sealing, and overlay projects."
+      ],
+      "current_method_or_workflow": "UNKNOWN",
+      "writer_caution": "Public records mention annual paving plans but do not specify a data-collection workflow for road conditions."
+    },
+    {
+      "input_row_key": "Basalt|Colorado",
+      "municipality_name": "Basalt",
+      "contact_preferred_name": "Boyd",
+      "contact_title": "Public Works Director",
+      "contact_fit_reason": "Boyd Stewart is the Public Works Director and is directly responsible for the town's street maintenance operations and capital projects.",
+      "personalization_tier": "PLAN",
+      "personalization_anchor_text": "2024 Street Maintenance and Overlay Project",
+      "verified_context_facts": [
+        "The Public Works department manages an annual street maintenance program, including crack sealing and asphalt overlays.",
+        "The town recently initiated a specific 2024 Street Maintenance and Overlay Project covering various local roads."
+      ],
+      "current_method_or_workflow": "UNKNOWN",
+      "writer_caution": "No current documented pavement management software is named in the project bid documents."
+    },
+    {
+      "input_row_key": "Vail|Colorado",
+      "municipality_name": "Vail",
+      "contact_preferred_name": "Greg",
+      "contact_title": "Director of Public Works and Transportation",
+      "contact_fit_reason": "Greg Hall oversees both Public Works and Transportation, including the comprehensive pavement management program for the town.",
+      "personalization_tier": "METHOD",
+      "personalization_anchor_text": "annual street maintenance and overlay program using a three-year inspection cycle",
+      "verified_context_facts": [
+        "The town inspects and rates all paved streets on a three-year cycle to update its pavement management system.",
+        "Public Works maintains approximately 35 miles of paved roads within the town limits."
+      ],
+      "current_method_or_workflow": "The town utilizes a pavement management system to inspect and rate all paved streets on a three-year cycle.",
+      "writer_caution": "While a management system is mentioned, the specific software or data collection tool (e.g., visual PCI or AI) is not named."
+    },
+    {
+      "input_row_key": "Fort Lupton|Colorado",
+      "municipality_name": "Fort Lupton",
+      "contact_preferred_name": "Roy",
+      "contact_title": "Public Works Director",
+      "contact_fit_reason": "Roy Vestal is the Director of Public Works, leading the city's infrastructure and pavement management efforts.",
+      "personalization_tier": "PLAN",
+      "personalization_anchor_text": "2024 Pavement Management Program for slurry seals and overlays",
+      "verified_context_facts": [
+        "The city operates a Pavement Management Program to identify and prioritize street repairs.",
+        "The 2024 program includes specific projects for slurry seals, overlays, and street patching."
+      ],
+      "current_method_or_workflow": "The city identifies streets for repair through its Pavement Management Program using visual inspections and Pavement Condition Index (PCI) ratings.",
+      "writer_caution": "The city references PCI ratings but does not explicitly name the software or external consultant used for data collection."
+    },
+    {
+      "input_row_key": "Rifle|Colorado",
+      "municipality_name": "Rifle",
+      "contact_preferred_name": "Paul",
+      "contact_title": "Public Works Director",
+      "contact_fit_reason": "Paul Robb is the Public Works Director, overseeing the Street Department and the execution of the city's 5-year Capital Improvement Plan.",
+      "personalization_tier": "PLAN",
+      "personalization_anchor_text": "2024 Street Maintenance and Resurfacing projects under the 5-year CIP",
+      "verified_context_facts": [
+        "The Street Department handles annual maintenance for 103 lane miles of city streets.",
+        "The city utilizes a 5-year Capital Improvement Plan (CIP) to schedule long-term street resurfacing work."
+      ],
+      "current_method_or_workflow": "UNKNOWN",
+      "writer_caution": "The budget document confirms a 5-year CIP but does not detail the specific software used to track road deterioration."
+    },
+    {
+      "input_row_key": "Timnath|Colorado",
+      "municipality_name": "Timnath",
+      "contact_preferred_name": "Don",
+      "contact_title": "Public Works Director",
+      "contact_fit_reason": "Don Taranto serves as the Public Works Director and Town Engineer, responsible for the town's Pavement Management Program.",
+      "personalization_tier": "PLAN",
+      "personalization_anchor_text": "2024 Pavement Management Program involving slurry seals and overlays",
+      "verified_context_facts": [
+        "Timnath maintains a formal Pavement Management Plan that includes condition assessments of all town-owned roads.",
+        "The town executes annual pavement preservation projects, including slurry seals and asphalt overlays."
+      ],
+      "current_method_or_workflow": "UNKNOWN",
+      "writer_caution": "The town mentions a Pavement Management Plan and condition assessments but does not specify the current rating software."
+    },
+    {
+      "input_row_key": "Northglenn|Colorado",
+      "municipality_name": "Northglenn",
+      "contact_preferred_name": "Kent",
+      "contact_title": "Director of Public Works",
+      "contact_fit_reason": "Kent Kisselman is the Director of Public Works, overseeing the Residential Road Improvement Program (RRIP) and the city's pavement management system.",
+      "personalization_tier": "METHOD",
+      "personalization_anchor_text": "Residential Road Improvement Program (RRIP) analyzing the condition of 110 miles of streets",
+      "verified_context_facts": [
+        "The city utilizes a Pavement Management System (PMS) to analyze and prioritize repairs for 110 miles of city streets.",
+        "The RRIP is an annual program dedicated to improving the pavement quality of residential roadways."
+      ],
+      "current_method_or_workflow": "The city utilizes a Pavement Management System (PMS) to analyze the condition of all 110 miles of streets and prioritize repairs.",
+      "writer_caution": "The city documentation mentions a PMS but does not explicitly name the vendor or data collection method."
+    },
+    {
+      "input_row_key": "Littleton|Colorado",
+      "municipality_name": "Littleton",
+      "contact_preferred_name": "Keith",
+      "contact_title": "Public Works & Utilities Director",
+      "contact_fit_reason": "Keith Reester directs the Public Works and Utilities department, which manages a 500 lane-mile street network using a dedicated Pavement Management Program.",
+      "personalization_tier": "METHOD",
+      "personalization_anchor_text": "2024 Annual Pavement Management Program tracking condition for 500 lane-miles",
+      "verified_context_facts": [
+        "Littleton maintains over 500 lane-miles of streets using a formal Pavement Management System.",
+        "The 2024 Pavement Management Program is funded to execute overlays, patching, and crack sealing based on condition ratings."
+      ],
+      "current_method_or_workflow": "The city uses a Pavement Management System to track the condition of its 500 lane-mile network and identify annual project priorities.",
+      "writer_caution": "While the system is well-established, the specific software (e.g., Paver or StreetSaver) is not mentioned in public-facing documents."
+    }
+  ]
+}

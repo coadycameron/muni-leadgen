@@ -8,7 +8,6 @@ __pycache__/
 *.zip
 terminal-commands.md
 /fragments
-*.json
 .venv/
 venv/
 *.doc

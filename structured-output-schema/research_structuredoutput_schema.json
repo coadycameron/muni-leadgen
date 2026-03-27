@@ -1,0 +1,86 @@
+{
+  "type": "object",
+  "properties": {
+    "leads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "input_row_key": {
+            "type": "string"
+          },
+          "contact_full_name": {
+            "type": "string"
+          },
+          "contact_preferred_name": {
+            "type": "string"
+          },
+          "contact_title": {
+            "type": "string"
+          },
+          "contact_email": {
+            "type": "string"
+          },
+          "personalization_tier": {
+            "type": "string",
+            "enum": [
+              "METHOD",
+              "PLAN",
+              "GENERAL"
+            ]
+          },
+          "personalization_anchor_text": {
+            "type": "string"
+          },
+          "current_method_or_workflow": {
+            "type": "string"
+          },
+          "verified_context_facts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 3
+          },
+          "writer_caution": {
+            "type": "string"
+          },
+          "contact_source_url": {
+            "type": "string"
+          },
+          "catalyst_source_url": {
+            "type": "string"
+          },
+          "corroboration_source_url": {
+            "type": "string"
+          },
+          "research_confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "input_row_key",
+          "contact_full_name",
+          "contact_preferred_name",
+          "contact_title",
+          "contact_email",
+          "personalization_tier",
+          "personalization_anchor_text",
+          "current_method_or_workflow",
+          "verified_context_facts",
+          "writer_caution",
+          "contact_source_url",
+          "catalyst_source_url",
+          "corroboration_source_url",
+          "research_confidence"
+        ]
+      }
+    }
+  },
+  "required": [
+    "leads"
+  ]
+}

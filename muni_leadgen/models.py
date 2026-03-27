@@ -43,6 +43,7 @@ class ResearchLead:
     catalyst_source_url: str
     corroboration_source_url: str
     research_confidence: float
+    contact_fit_reason: str = ""
 
     @classmethod
     def from_dict(cls, payload: Dict[str, Any]) -> "ResearchLead":
@@ -61,6 +62,7 @@ class ResearchLead:
             catalyst_source_url=str(payload.get("catalyst_source_url") or "").strip(),
             corroboration_source_url=str(payload.get("corroboration_source_url") or "").strip(),
             research_confidence=float(payload.get("research_confidence") or 0.0),
+            contact_fit_reason=str(payload.get("contact_fit_reason") or "").strip(),
         )
 
 
@@ -69,26 +71,40 @@ class WriterLead:
     input_row_key: str
     municipality_name: str
     state: str
+    contact_full_name: str
     contact_preferred_name: str
     contact_title: str
+    contact_email: str
+    contact_fit_reason: str
     personalization_tier: str
     personalization_anchor_text: str
-    current_method_or_workflow: str
     verified_context_facts: List[str]
+    current_method_or_workflow: str
     writer_caution: str
+    contact_source_url: str
+    catalyst_source_url: str
+    corroboration_source_url: str
+    research_confidence: float
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "input_row_key": self.input_row_key,
             "municipality_name": self.municipality_name,
             "state": self.state,
+            "contact_full_name": self.contact_full_name,
             "contact_preferred_name": self.contact_preferred_name,
             "contact_title": self.contact_title,
+            "contact_email": self.contact_email,
+            "contact_fit_reason": self.contact_fit_reason,
             "personalization_tier": self.personalization_tier,
             "personalization_anchor_text": self.personalization_anchor_text,
-            "current_method_or_workflow": self.current_method_or_workflow,
             "verified_context_facts": list(self.verified_context_facts),
+            "current_method_or_workflow": self.current_method_or_workflow,
             "writer_caution": self.writer_caution,
+            "contact_source_url": self.contact_source_url,
+            "catalyst_source_url": self.catalyst_source_url,
+            "corroboration_source_url": self.corroboration_source_url,
+            "research_confidence": self.research_confidence,
         }
 
 

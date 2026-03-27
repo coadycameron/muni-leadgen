@@ -96,7 +96,7 @@ def test_filter_research_leads_keeps_best_duplicate_by_confidence():
     assert dropped == {}
 
 
-def test_build_writer_input_payload_contains_expected_fields():
+def test_build_writer_input_payload_contains_new_schema_fields():
     selected = [
         MunicipalityRow(
             municipality_name="Testville",
@@ -105,6 +105,33 @@ def test_build_writer_input_payload_contains_expected_fields():
         )
     ]
     payload = build_writer_input_payload({"Testville|Colorado": _lead()}, selected)
-    assert payload["leads"][0]["municipality_name"] == "Testville"
-    assert payload["leads"][0]["contact_preferred_name"] == "Pat"
-    assert payload["leads"][0]["personalization_tier"] == "PLAN"
+    lead = payload["leads"][0]
+    assert lead["municipality_name"] == "Testville"
+    assert lead["state"] == "Colorado"
+    assert lead["contact_full_name"] == "Pat Roads"
+    assert lead["contact_email"] == "pat@example.org"
+    assert lead["contact_preferred_name"] == "Pat"
+    assert lead["personalization_tier"] == "PLAN"
+    assert lead["contact_source_url"] == "https://example.org/contact/pat-roads"
+    assert lead["research_confidence"] == 0.95
+    assert "direct responsibility" in lead["contact_fit_reason"]
+
+
+def test_build_writer_input_payload_uses_explicit_contact_fit_reason_when_present():
+    selected = [
+        MunicipalityRow(
+            municipality_name="Testville",
+            state="Colorado",
+            municipality_key="Testville|Colorado",
+        )
+    ]
+    payload = build_writer_input_payload(
+        {
+            "Testville|Colorado": _lead(
+                contact_fit_reason="Named public works lead with direct oversight of municipal road planning."
+            )
+        },
+        selected,
+    )
+    lead = payload["leads"][0]
+    assert lead["contact_fit_reason"] == "Named public works lead with direct oversight of municipal road planning."
