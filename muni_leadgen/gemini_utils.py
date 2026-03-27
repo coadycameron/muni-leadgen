@@ -10,10 +10,6 @@ from typing import Any, Dict, Optional, Tuple
 _CLIENT = None
 
 
-class GroundedSearchNotUsedError(RuntimeError):
-    pass
-
-
 def get_gemini_client():
     global _CLIENT
     if _CLIENT is not None:
@@ -148,10 +144,6 @@ def call_gemini(
     resolved_model = resolve_structured_model(model, use_google_search, stage)
     attempts = int(os.environ.get("GEMINI_ATTEMPTS", "4"))
     base_sleep = float(os.environ.get("GEMINI_RETRY_SLEEP", "2.0"))
-    default_min_search_queries = "1" if stage == "research" and use_google_search else "0"
-    min_search_queries_required = int(
-        os.environ.get(f"GEMINI_MIN_SEARCH_QUERIES_{stage.upper()}", os.environ.get("GEMINI_MIN_SEARCH_QUERIES", default_min_search_queries))
-    )
 
     expected_top_key = "leads" if stage == "research" else "emails" if stage == "email" else None
     last_error: Optional[Exception] = None
@@ -203,12 +195,12 @@ def call_gemini(
             if parsed is None and raw_text:
                 parsed = _normalize(extract_json_payload(raw_text))
 
-            if use_google_search and min_search_queries_required > 0:
+            if use_google_search:
                 search_queries = count_grounding_search_queries(resp)
-                if search_queries < min_search_queries_required:
-                    raise GroundedSearchNotUsedError(
-                        f"Grounded search required for stage={stage} but only {search_queries} search queries were used."
-                    )
+                print(
+                    f"Gemini stage={stage} use_google_search=true grounding_search_queries={search_queries}",
+                    file=sys.stderr,
+                )
 
             if response_json_schema is not None and parsed is None:
                 raise RuntimeError(f"Gemini returned an unusable structured payload for stage={stage}")

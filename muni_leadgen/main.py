@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from leadgen_common.email_verification_waterfall import filter_rows_by_email_verification_waterfall
 from leadgen_common.hubspot_dedupe import filter_new_leads_against_hubspot
@@ -22,6 +21,16 @@ PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 SCHEMAS_DIR = Path(__file__).resolve().parent.parent / "schemas"
 
 
+RESEARCH_RETRY_SUFFIX = (
+    "\n\nRetry instructions\n"
+    "- Keep Google Search enabled and verify each municipality using live web results.\n"
+    "- Return only direct named contacts with direct email addresses.\n"
+    "- Every kept lead must include non-blank contact_source_url, catalyst_source_url, and corroboration_source_url.\n"
+    "- Use distinct evidence pages when possible. Avoid returning the same URL for all three fields.\n"
+    "- If a municipality does not have enough evidence for a strong lead, omit it rather than guessing."
+)
+
+
 def _read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
@@ -30,13 +39,62 @@ def _read_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _build_research_user_prompt(base_prompt: str, selected_rows: List[MunicipalityRow]) -> str:
+def _build_research_user_prompt(base_prompt: str, selected_rows: List[MunicipalityRow], extra_instructions: str = "") -> str:
     payload = {"INPUT_ROWS": [row.to_input_row() for row in selected_rows]}
+    suffix = extra_instructions.strip()
+    if suffix:
+        return f"{base_prompt}\n{suffix}\n\nINPUT_ROWS.json\n{safe_json_dumps(payload)}"
     return f"{base_prompt}\n\nINPUT_ROWS.json\n{safe_json_dumps(payload)}"
 
 
 def _build_writer_user_prompt(base_prompt: str, writer_input_payload: Dict) -> str:
     return f"{base_prompt}\n\nWRITER_INPUT.json\n{safe_json_dumps(writer_input_payload)}"
+
+
+def _run_research_batch(
+    selected_rows: List[MunicipalityRow],
+    research_system_prompt: str,
+    research_user_prompt: str,
+    research_schema: Dict,
+) -> Tuple[str, List[ResearchLead], Dict[str, ResearchLead], Dict[str, str], str, int]:
+    max_attempts = max(1, int(os.environ.get("MUNI_RESEARCH_BATCH_ATTEMPTS", "2")))
+    raw_attempts: List[str] = []
+    best_raw = ""
+    best_model = os.environ.get("GEMINI_MODEL_RESEARCH", "gemini-2.5-flash")
+    best_leads: List[ResearchLead] = []
+    best_kept: Dict[str, ResearchLead] = {}
+    best_dropped: Dict[str, str] = {}
+    attempts_used = 0
+
+    for attempt in range(1, max_attempts + 1):
+        extra = RESEARCH_RETRY_SUFFIX if attempt > 1 else ""
+        research_user = _build_research_user_prompt(research_user_prompt, selected_rows, extra_instructions=extra)
+        raw_research, research_payload, research_model = call_gemini(
+            system_prompt=research_system_prompt,
+            user_prompt=research_user,
+            model=os.environ.get("GEMINI_MODEL_RESEARCH", "gemini-2.5-flash"),
+            use_google_search=True,
+            stage="research",
+            response_json_schema=research_schema,
+            max_output_tokens=int(os.environ.get("GEMINI_MAX_OUTPUT_TOKENS_RESEARCH", "6000")),
+            temperature=float(os.environ.get("GEMINI_TEMPERATURE_RESEARCH", "0.2")),
+        )
+        attempts_used = attempt
+        raw_attempts.append(f"===== RESEARCH ATTEMPT {attempt} =====\n{raw_research}")
+
+        raw_research_leads = [ResearchLead.from_dict(x) for x in list((research_payload or {}).get("leads", []) or [])]
+        kept_research_leads, dropped_research_reasons = filter_research_leads(raw_research_leads, selected_rows)
+
+        best_raw = raw_research
+        best_model = research_model
+        best_leads = raw_research_leads
+        best_kept = kept_research_leads
+        best_dropped = dropped_research_reasons
+
+        if kept_research_leads:
+            break
+
+    return "\n\n".join(raw_attempts), best_leads, best_kept, best_dropped, best_model, attempts_used
 
 
 def main() -> None:
@@ -56,23 +114,15 @@ def main() -> None:
     research_schema = _read_json(SCHEMAS_DIR / "research_structuredoutput_schema.json")
     writer_schema = _read_json(SCHEMAS_DIR / "municipal_writer_structuredoutput_schema.json")
 
-    research_user = _build_research_user_prompt(research_user_prompt, selected_rows)
-    raw_research, research_payload, research_model = call_gemini(
-        system_prompt=research_system_prompt,
-        user_prompt=research_user,
-        model=os.environ.get("GEMINI_MODEL_RESEARCH", "gemini-2.5-flash"),
-        use_google_search=True,
-        stage="research",
-        response_json_schema=research_schema,
-        max_output_tokens=int(os.environ.get("GEMINI_MAX_OUTPUT_TOKENS_RESEARCH", "6000")),
-        temperature=float(os.environ.get("GEMINI_TEMPERATURE_RESEARCH", "0.2")),
+    raw_research_log, raw_research_leads, kept_research_leads, dropped_research_reasons, research_model, research_attempts_used = _run_research_batch(
+        selected_rows=selected_rows,
+        research_system_prompt=research_system_prompt,
+        research_user_prompt=research_user_prompt,
+        research_schema=research_schema,
     )
 
     out_raw_research = Path(os.environ.get("OUT_RAW_RESEARCH", "muni_raw_research.txt"))
-    out_raw_research.write_text(raw_research, encoding="utf-8")
-
-    raw_research_leads = [ResearchLead.from_dict(x) for x in list((research_payload or {}).get("leads", []) or [])]
-    kept_research_leads, dropped_research_reasons = filter_research_leads(raw_research_leads, selected_rows)
+    out_raw_research.write_text(raw_research_log, encoding="utf-8")
 
     dedupe_rows = [[lead.contact_email] for lead in kept_research_leads.values()]
     dedupe_kept_rows, existing_emails = filter_new_leads_against_hubspot(dedupe_rows, email_col_index=0)
@@ -95,8 +145,9 @@ def main() -> None:
         if v.contact_email.strip().lower() in verified_emails
     }
     for key, lead in list(kept_research_leads.items()):
-        if lead.contact_email.strip().lower() in removed_map:
-            dropped_research_reasons[key] = removed_map[lead.contact_email.strip().lower()]
+        email_lower = lead.contact_email.strip().lower()
+        if email_lower in removed_map:
+            dropped_research_reasons[key] = removed_map[email_lower]
 
     writer_input_payload = build_writer_input_payload(kept_research_leads, selected_rows)
     out_writer_input = Path(os.environ.get("OUT_WRITER_INPUT_JSON", "WRITER_INPUT.generated.json"))
@@ -178,8 +229,9 @@ def main() -> None:
     summary = {
         "run_id": run_id,
         "selected_count": len(selected_rows),
+        "research_attempts_used": research_attempts_used,
         "research_returned": len(raw_research_leads),
-        "research_kept_after_filters": len(kept_research_leads),
+        "research_kept_after_quality_filters": len(kept_research_leads),
         "writer_generated": len(writer_emails_by_key),
         "finalized_count": len(finalized_leads),
         "hubspot_created": created,

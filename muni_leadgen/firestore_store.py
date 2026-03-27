@@ -14,12 +14,10 @@ from .util import (
     choice_shuffle,
     cooldown_ready,
     future_iso,
-    iso_now,
     municipality_key,
     parse_priority,
     stable_bucket,
     truthy,
-    utc_now,
 )
 
 
@@ -35,68 +33,137 @@ class FirestoreMunicipalityStore:
     def collection(self):
         return self.client.collection(self.collection_name)
 
+    def _row_value(self, row: Sequence[Any], idx: Dict[str, int], header: str) -> Any:
+        col = idx.get(header)
+        if col is None or col < 0 or col >= len(row):
+            return None
+        return row[col]
+
+    def _build_import_payload(
+        self,
+        row: Sequence[Any],
+        idx: Dict[str, int],
+        import_source: str,
+    ) -> Optional[Tuple[str, Dict[str, Any]]]:
+        name = str(self._row_value(row, idx, "Municipality") or "").strip()
+        state = str(self._row_value(row, idx, "State") or "").strip()
+        if not name or not state:
+            return None
+
+        pop_raw = self._row_value(row, idx, "Population 2024")
+        try:
+            population = int(pop_raw) if pop_raw not in (None, "") else None
+        except Exception:
+            population = None
+
+        explicit_priority = str(self._row_value(row, idx, "Priority") or "").strip()
+        priority = parse_priority(population, explicit_priority=explicit_priority)
+        key = municipality_key(name, state)
+
+        payload = {
+            "municipality_key": key,
+            "municipality_name": name,
+            "state": state,
+            "type": str(self._row_value(row, idx, "Type") or "").strip(),
+            "population_2024": population,
+            "priority": priority,
+            "random_bucket": stable_bucket(key),
+            "open_for_research": priority == "Highest - Target",
+            "lead_status": "open" if priority == "Highest - Target" else "not_target",
+            "lead_gen_restrict_sync": False,
+            "import_source": import_source,
+            "updated_at": firestore.SERVER_TIMESTAMP,
+        }
+        return key, payload
+
+    def _commit_import_chunk(self, pending: Sequence[Tuple[str, Dict[str, Any]]]) -> Tuple[int, int, int]:
+        if not pending:
+            return 0, 0, 0
+
+        doc_refs = [self.collection.document(key) for key, _ in pending]
+        existing_ids = {snap.id for snap in self.client.get_all(doc_refs) if snap.exists}
+
+        batch = self.client.batch()
+        created = 0
+        updated = 0
+
+        for key, payload in pending:
+            doc_ref = self.collection.document(key)
+            if key in existing_ids:
+                batch.set(doc_ref, payload, merge=True)
+                updated += 1
+                continue
+
+            new_payload = dict(payload)
+            new_payload.update(
+                {
+                    "created_at": firestore.SERVER_TIMESTAMP,
+                    "active_contact_email": None,
+                    "engaged_contact_email": None,
+                    "reserved_by_run_id": None,
+                    "reserved_at": None,
+                    "next_research_eligible_at": None,
+                    "last_outcome": "",
+                    "blocked_emails": [],
+                    "stale_contact_count": 0,
+                }
+            )
+            batch.set(doc_ref, new_payload, merge=True)
+            created += 1
+
+        batch.commit()
+        return created, updated, len(pending)
+
     def import_master_list_from_xlsx(self, xlsx_path: str, sheet_name: Optional[str] = None) -> Dict[str, int]:
         wb = openpyxl.load_workbook(xlsx_path, read_only=True, data_only=True)
         ws = wb[sheet_name] if sheet_name else wb.active
         rows_iter = ws.iter_rows(values_only=True)
         headers = [str(x or "").strip() for x in next(rows_iter)]
         idx = {h: i for i, h in enumerate(headers)}
+
+        import_source = Path(xlsx_path).name
+        target_only = truthy(os.environ.get("FIRESTORE_IMPORT_ONLY_HIGHEST_TARGET", "0"))
+        chunk_size = int(os.environ.get("FIRESTORE_IMPORT_BATCH_SIZE", "300"))
+        progress_every = int(os.environ.get("FIRESTORE_IMPORT_PROGRESS_EVERY", "1000"))
+
         created = 0
         updated = 0
         skipped = 0
+        written = 0
+        pending: List[Tuple[str, Dict[str, Any]]] = []
 
-        for row in rows_iter:
-            name = str(row[idx.get("Municipality", -1)] or "").strip()
-            state = str(row[idx.get("State", -1)] or "").strip()
-            if not name or not state:
+        for row_number, row in enumerate(rows_iter, start=2):
+            built = self._build_import_payload(row, idx, import_source)
+            if built is None:
                 skipped += 1
                 continue
 
-            pop_raw = row[idx.get("Population 2024", -1)] if idx.get("Population 2024") is not None else None
-            try:
-                population = int(pop_raw) if pop_raw not in (None, "") else None
-            except Exception:
-                population = None
+            key, payload = built
+            if target_only and payload["priority"] != "Highest - Target":
+                skipped += 1
+                continue
 
-            explicit_priority = str(row[idx.get("Priority", -1)] or "").strip()
-            priority = parse_priority(population, explicit_priority=explicit_priority)
-            key = municipality_key(name, state)
-            doc_ref = self.collection.document(key)
-            existing = doc_ref.get()
-            payload = {
-                "municipality_key": key,
-                "municipality_name": name,
-                "state": state,
-                "type": str(row[idx.get("Type", -1)] or "").strip(),
-                "population_2024": population,
-                "priority": priority,
-                "random_bucket": stable_bucket(key),
-                "open_for_research": priority == "Highest - Target",
-                "lead_status": "open" if priority == "Highest - Target" else "not_target",
-                "blocked_emails": [],
-                "stale_contact_count": 0,
-                "lead_gen_restrict_sync": False,
-                "import_source": Path(xlsx_path).name,
-                "updated_at": firestore.SERVER_TIMESTAMP,
-            }
-            if existing.exists:
-                doc_ref.set(payload, merge=True)
-                updated += 1
-            else:
-                payload.update(
-                    {
-                        "created_at": firestore.SERVER_TIMESTAMP,
-                        "active_contact_email": None,
-                        "engaged_contact_email": None,
-                        "reserved_by_run_id": None,
-                        "reserved_at": None,
-                        "next_research_eligible_at": None,
-                        "last_outcome": "",
-                    }
-                )
-                doc_ref.set(payload, merge=True)
-                created += 1
-        return {"created": created, "updated": updated, "skipped": skipped}
+            pending.append((key, payload))
+            if len(pending) < chunk_size:
+                continue
+
+            chunk_created, chunk_updated, chunk_written = self._commit_import_chunk(pending)
+            created += chunk_created
+            updated += chunk_updated
+            written += chunk_written
+            pending = []
+
+            if written % progress_every == 0:
+                print(f"Imported {written} rows so far at worksheet row {row_number}...")
+
+        if pending:
+            chunk_created, chunk_updated, chunk_written = self._commit_import_chunk(pending)
+            created += chunk_created
+            updated += chunk_updated
+            written += chunk_written
+
+        print(f"Import complete. written={written} created={created} updated={updated} skipped={skipped}")
+        return {"written": written, "created": created, "updated": updated, "skipped": skipped}
 
     def _is_doc_eligible(self, doc: Dict[str, Any]) -> bool:
         if doc.get("priority") != "Highest - Target":

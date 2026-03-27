@@ -94,7 +94,7 @@ This repo is designed around **custom properties plus workflows**.
 ### Contact properties expected
 Set these internal names to match your portal or override with env vars.
 
-- `ai-muni-lead`
+- `aimunilead`
 - `tp_muni_key`
 - `tp_muni_priority`
 - `tp_muni_status`
@@ -107,13 +107,13 @@ Set these internal names to match your portal or override with env vars.
 - `tp_muni_corroboration_source_url`
 - `tp_muni_writer_version`
 - `tp_muni_research_version`
-- `lead-gen-restrict-sync`
+- `leadgenrestrictsync`
 - `external_bounce`
 
 ### Company properties expected
 Recommended:
 
-- `ai-muni-account`
+- `aimuniaccount`
 - `tp_muni_key`
 - `tp_muni_priority`
 - `tp_muni_status`

@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import random
 import re
 import time
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Iterable, List, Optional, Tuple
 
 
 def utc_now() -> datetime:
@@ -22,10 +21,25 @@ def make_run_id(prefix: str = "muni") -> str:
     return f"{prefix}_{int(time.time())}"
 
 
+def _sanitize_firestore_id_component(value: str) -> str:
+    clean = " ".join((value or "").strip().split())
+    clean = clean.replace("/", " ")
+    clean = clean.replace("\\", " ")
+    clean = re.sub(r"[\x00-\x1F\x7F]", " ", clean)
+    clean = re.sub(r"\s+", " ", clean).strip(" .")
+    if not clean:
+        return "unknown"
+    return clean
+
+
 def municipality_key(name: str, state: str) -> str:
-    clean_name = " ".join((name or "").strip().split())
-    clean_state = " ".join((state or "").strip().split())
-    return f"{clean_name}|{clean_state}"
+    clean_name = _sanitize_firestore_id_component(name)
+    clean_state = _sanitize_firestore_id_component(state)
+    key = f"{clean_name}|{clean_state}".strip("|")
+    if key in {"", ".", ".."} or re.fullmatch(r"__.*__", key):
+        digest = hashlib.sha1(f"{name}|{state}".encode("utf-8")).hexdigest()[:16]
+        return f"muni_{digest}"
+    return key
 
 
 def stable_bucket(key: str, modulo: int = 1000) -> int:

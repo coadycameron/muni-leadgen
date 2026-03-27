@@ -23,8 +23,8 @@ class HubSpotClient:
         self.max_retries = int(os.environ.get("HUBSPOT_MAX_RETRIES", "4"))
         self.headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
-        self.contact_flag_property = os.environ.get("HUBSPOT_MUNI_CONTACT_FLAG_PROPERTY", "ai-muni-lead").strip() or "ai-muni-lead"
-        self.company_flag_property = os.environ.get("HUBSPOT_MUNI_COMPANY_FLAG_PROPERTY", "ai-muni-account").strip() or "ai-muni-account"
+        self.contact_flag_property = os.environ.get("HUBSPOT_MUNI_CONTACT_FLAG_PROPERTY", "aimunilead").strip() or "ai-muni-lead"
+        self.company_flag_property = os.environ.get("HUBSPOT_MUNI_COMPANY_FLAG_PROPERTY", "aimuniaccount").strip() or "ai-muni-account"
         self.muni_key_property = os.environ.get("HUBSPOT_MUNI_KEY_PROPERTY", "tp_muni_key").strip() or "tp_muni_key"
         self.priority_property = os.environ.get("HUBSPOT_MUNI_PRIORITY_PROPERTY", "tp_muni_priority").strip() or "tp_muni_priority"
         self.status_property = os.environ.get("HUBSPOT_MUNI_STATUS_PROPERTY", "tp_muni_status").strip() or "tp_muni_status"
@@ -37,9 +37,10 @@ class HubSpotClient:
         self.corroboration_source_url_property = os.environ.get("HUBSPOT_MUNI_CORROBORATION_SOURCE_URL_PROPERTY", "tp_muni_corroboration_source_url").strip() or "tp_muni_corroboration_source_url"
         self.writer_version_property = os.environ.get("HUBSPOT_MUNI_WRITER_VERSION_PROPERTY", "tp_muni_writer_version").strip() or "tp_muni_writer_version"
         self.research_version_property = os.environ.get("HUBSPOT_MUNI_RESEARCH_VERSION_PROPERTY", "tp_muni_research_version").strip() or "tp_muni_research_version"
-        self.restrict_property = os.environ.get("HUBSPOT_LEAD_RESTRICT_SYNC_PROPERTY", "lead-gen-restrict-sync").strip() or "lead-gen-restrict-sync"
+        self.contact_restrict_property = os.environ.get("HUBSPOT_CONTACT_RESTRICT_SYNC_PROPERTY", "leadgenrestrictsync").strip() or "leadgenrestrictsync"
+        self.company_restrict_property = os.environ.get("HUBSPOT_COMPANY_RESTRICT_PROPERTY", "companyleadgenrestrictboolean").strip() or "companyleadgenrestrictboolean"
         self.external_bounce_property = os.environ.get("HUBSPOT_EXTERNAL_BOUNCE_PROPERTY", "external_bounce").strip() or "external_bounce"
-
+        
     def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
         last_exc: Optional[Exception] = None
         for attempt in range(1, self.max_retries + 1):
@@ -74,7 +75,7 @@ class HubSpotClient:
     def search_company_by_muni_key(self, muni_key: str, properties: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
         payload = {
             "filterGroups": [{"filters": [{"propertyName": self.muni_key_property, "operator": "EQ", "value": muni_key}]}],
-            "properties": properties or ["name", self.muni_key_property, self.restrict_property],
+            "properties": properties or ["name", self.muni_key_property, self.company_restrict_property],
             "limit": 1,
         }
         response = self._request("POST", f"{self.base_url}/crm/v3/objects/companies/search", json=payload)
@@ -160,7 +161,7 @@ class HubSpotClient:
             self.muni_key_property,
             self.sequence_outcome_property,
             self.contact_status_property,
-            self.restrict_property,
+            self.contact_restrict_property,
             self.external_bounce_property,
         ]
         result = self.search_contact_by_email(email, properties=props)
@@ -170,7 +171,7 @@ class HubSpotClient:
         return out
 
     def get_company_outcome_snapshot(self, muni_key: str) -> Optional[Dict[str, Any]]:
-        props = [self.muni_key_property, self.restrict_property, self.status_property]
+        props = [self.muni_key_property, self.company_restrict_property, self.status_property]
         result = self.search_company_by_muni_key(muni_key, properties=props)
         if not result:
             return None
@@ -180,7 +181,7 @@ class HubSpotClient:
         company_props = (company_snapshot or {}).get("properties", {}) or {}
         contact_props = (contact_snapshot or {}).get("properties", {}) or {}
 
-        if truthy(company_props.get(self.restrict_property)) or truthy(contact_props.get(self.restrict_property)):
+        if truthy(company_props.get(self.company_restrict_property)) or truthy(contact_props.get(self.contact_restrict_property)):
             return "restricted"
         if truthy(contact_props.get(self.external_bounce_property)):
             return "bounced"
